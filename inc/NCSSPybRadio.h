@@ -50,19 +50,14 @@ DEALINGS IN THE SOFTWARE.
   * Class definition for a NCSS PyBoard Radio device.
   *
   * Represents the device as a whole, and includes member variables that represent various device drivers
-  * used to control aspects of the micro:bit.
+  * used to control aspects of the device.
+  *
+  * It is basically a very cut-down version of the MicroBit class.
   */
 class NCSSPybRadio
 {
     private:
 
-    /**
-      * A listener to perform actions as a result of Message Bus reflection.
-      *
-      * In some cases we want to perform lazy instantiation of components, such as
-      * the compass and the accelerometer, where we only want to add them to the idle
-      * fiber when someone has the intention of using these components.
-      */
     uint8_t                     status;
 
     public:
@@ -89,16 +84,18 @@ class NCSSPybRadio
       * Constructor.
       *
       * Create a representation of a NCSS Radio device, which includes member variables
-      * that represent various device drivers used to control aspects of the micro:bit.
+      * that represent various device drivers.
+      *
+      * This is basically a very cut down version of the MicroBit class.
       */
     NCSSPybRadio();
 
     /**
       * Post constructor initialisation method.
       *
-      * This call will initialised the scheduler and memory allocator.
+      * This call will initialised the scheduler.
       *
-      * @note This method must be called before user code utilises any uBit library
+      * @note This method must be called before user code utilises any MicroBit library
       * code.
       */
     void init();
@@ -109,7 +106,7 @@ class NCSSPybRadio
       * @return A ManagedString representing the friendly name of this device.
       *
       * @code
-      * ManagedString name = uBit.getName();
+      * ManagedString name = module.getName();
       * @endcode
       */
     static ManagedString getName();
@@ -120,7 +117,7 @@ class NCSSPybRadio
       * @return A ManagedString representing the serial number of this device.
       *
       * @code
-      * ManagedString serialNumber = uBit.getSerial();
+      * ManagedString serialNumber = module.getSerial();
       * @endcode
       */
     static ManagedString getSerial();
@@ -129,7 +126,7 @@ class NCSSPybRadio
       * Will reset the module when called.
       *
       * @code
-      * uBit.reset();
+      * module.reset();
       * @endcode
       */
     void reset();
@@ -151,7 +148,7 @@ class NCSSPybRadio
       * @return MICROBIT_OK on success, MICROBIT_INVALID_PARAMETER milliseconds is less than zero.
       *
       * @code
-      * uBit.sleep(20); //sleep for 20ms
+      * module.sleep(20); //sleep for 20ms
       * @endcode
       *
       * @note This operation is currently limited by the rate of the system timer, therefore
@@ -186,7 +183,7 @@ class NCSSPybRadio
   * @return A ManagedString representing the friendly name of this device.
   *
   * @code
-  * ManagedString name = uBit.getName();
+  * ManagedString name = module.getName();
   * @endcode
   */
 inline ManagedString NCSSPybRadio::getName()
@@ -200,7 +197,7 @@ inline ManagedString NCSSPybRadio::getName()
   * @return A ManagedString representing the serial number of this device.
   *
   * @code
-  * ManagedString serialNumber = uBit.getSerial();
+  * ManagedString serialNumber = module.getSerial();
   * @endcode
   */
 inline ManagedString NCSSPybRadio::getSerial()
@@ -220,7 +217,7 @@ inline ManagedString NCSSPybRadio::getSerial()
   * Will reset the module when called.
   *
   * @code
-  * uBit.reset();
+  * module.reset();
   * @endcode
   */
 inline void NCSSPybRadio::reset()
@@ -245,7 +242,7 @@ inline void NCSSPybRadio::reset()
   * @return MICROBIT_OK on success, MICROBIT_INVALID_PARAMETER milliseconds is less than zero.
   *
   * @code
-  * uBit.sleep(20); //sleep for 20ms
+  * module.sleep(20); //sleep for 20ms
   * @endcode
   *
   * @note This operation is currently limited by the rate of the system timer, therefore

@@ -50,8 +50,11 @@ DEALINGS IN THE SOFTWARE.
 /**
   * Constructor.
   *
-  * Create a representation of a MicroBit device, which includes member variables
-  * that represent various device drivers used to control aspects of the micro:bit.
+  * Create a representation of the NCSS Radio device, which includes member variables
+  * that represent various device drivers used to control portions of the board.
+  *
+  * This is basically a very cut down version of a microbit with pins remapped based
+  * on the build of the radio.
   */
 NCSSPybRadio::NCSSPybRadio() :
     serial(P0_8, P0_9),
@@ -71,7 +74,7 @@ NCSSPybRadio::NCSSPybRadio() :
   * This call will initialize the scheduler.
   *
   * @code
-  * uBit.init();
+  * module.init();
   * @endcode
   *
   * @note This method must be called before user code utilises any microbit modules.
