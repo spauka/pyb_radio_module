@@ -1,0 +1,14 @@
+{
+  "name": "pyb-radio-module",
+  "version": "0.1.0",
+  "description": "Driver for the NCSS PyBoard Radio Module",
+  "license": "MIT",
+  "dependencies": {
+    "microbit-dal": "lancaster-university/microbit-dal#v2.0.0-rc10"
+  },
+  "extraIncludes": [
+    "inc"
+  ],
+  "targetDependencies": {},
+  "bin": "./source"
+}

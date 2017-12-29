@@ -1,0 +1,21 @@
+{
+    "microbit-dal":{
+        "bluetooth":{
+            "enabled": 0,
+            "pairing_mode": 0
+        },
+        "reuse_sd": 1,
+        "default_pullmode":"PullDown",
+        "heap_allocator": 0,
+        "system_tick_period": 6,
+        "system_components": 10,
+        "idle_components": 6,
+        "debug": 0,
+        "heap_debug": 0,
+        "panic_heap_full": 0,
+        "stack_size":2048,
+        "sram_base":"0x20000008",
+        "sram_end":"0x20004000",
+        "sd_limit":"0x20004000"
+    }
+}
