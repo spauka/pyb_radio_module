@@ -28,14 +28,18 @@ NCSSPybRadio module;
 
 int main()
 {
-    // Initialise the module
+    // Initialise the module and radio
     module.init();
+    module.radio.enable();
 
     while (true) {
-        module.led_io.setDigitalValue(1);
-        module.sleep(500);
-        module.led_io.setDigitalValue(0);
-        module.sleep(500);
+        //module.led_io.setDigitalValue(1);
+        module.led_io.setAnalogValue(12);
+        module.radio.datagram.send("ON");
+        module.sleep(5000);
+        module.led_io.setAnalogValue(0);
+        module.radio.datagram.send("OFF");
+        module.sleep(5000);
     }
 
     // We will never get here, but this would put us in a waiting loop.
