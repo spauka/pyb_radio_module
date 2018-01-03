@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 #include "SPIRadioCmds.h"
 
 // We need access to the module/spi instances
-extern NCSSPybModule module;
+extern NCSSPybRadio module;
 extern SPISlave spi;
 
 // Loop over the command buffer and 
@@ -37,7 +37,7 @@ void spi_cmd_switch(spi_radio_cmds_t cmd) {
     switch(cmd) {
         case SPI_NOOP:
             // NOOP
-            spi.reply(SPI_SUCCESS);
+            spi.reply(SPI_NOCMD);
             break;
 
         // Radio State
@@ -52,8 +52,14 @@ void spi_cmd_switch(spi_radio_cmds_t cmd) {
             spi.reply(SPI_SUCCESS);
             break;
         case SPI_RADIO_STATE_QUERY:
-            spi.reply(SPI_SUCCESS); // TODO: Multiple responses
-            spi.reply(module.radio_enabled);
+            if (module.radio_enabled)
+                spi.reply(SPI_SUCCESS_AND_ENABLED);
+            else
+                spi.reply(SPI_SUCCESS_AND_DISABLED);
+            break;
+        default:
+            module.radio.datagram.send("BLA\r\n");
+            spi.reply(SPI_SUCCESS);
             break;
     }
 }

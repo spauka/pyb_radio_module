@@ -26,5 +26,9 @@ DEALINGS IN THE SOFTWARE.
 #define SPI_RADIO_H
 
 #include "mbed.h"
+#include "SPIRadioCmds.h"
+
+// Loop to handle SPI commands
+void spi_cmd_switch(spi_radio_cmds_t);
 
 #endif
