@@ -30,11 +30,13 @@ static const uint8_t SPI_STATE_ON = 0x01;
 static const uint8_t SPI_STATE_OFF = 0x00;
 static const uint8_t SPI_QUERY = 0x02;
 
-// Peripherals
+// Peripherals and commands
 static const uint8_t SPI_RADIO_STATE = 0x01 << 2;
-static const uint8_t SPI_RADIO_FREQ = 0x02 << 2;
+static const uint8_t SPI_RADIO_CHAN = 0x02 << 2;
 static const uint8_t SPI_RADIO_POWER = 0x03 << 2;
 static const uint8_t SPI_MSG_AVAIL = 0x04 << 2;
+static const uint8_t SPI_SEND_MSG = 0x05 << 2;
+static const uint8_t SPI_RECV_MSG = 0x06 << 2;
 
 // Cmds from master
 typedef enum {
@@ -44,13 +46,16 @@ typedef enum {
     SPI_RADIO_STATE_ENABLE = SPI_RADIO_STATE | SPI_STATE_ON,
     SPI_RADIO_STATE_QUERY = SPI_RADIO_STATE | SPI_QUERY,
     // Radio Frequency
-    SPI_RADIO_FREQ_SET = SPI_RADIO_FREQ,
-    SPI_RADIO_FREQ_QUERY = SPI_RADIO_FREQ | SPI_QUERY,
+    SPI_RADIO_CHAN_SET = SPI_RADIO_CHAN,
+    SPI_RADIO_CHAN_QUERY = SPI_RADIO_CHAN | SPI_QUERY,
     // Radio Transmit Power
     SPI_RADIO_POWER_SET = SPI_RADIO_POWER,
     SPI_RADIO_POWER_QUERY = SPI_RADIO_POWER | SPI_QUERY,
     // Message Available Query
-    SPI_MSG_QUERY = SPI_MSG_AVAIL | SPI_QUERY
+    SPI_MSG_QUERY = SPI_MSG_AVAIL | SPI_QUERY,
+    // Send and recieve commands
+    SPI_SEND_CMD = SPI_SEND_MSG,
+    SPI_RECV_CMD = SPI_RECV_MSG
 } spi_radio_cmds_t;
 
 // Responses
@@ -58,7 +63,17 @@ typedef enum {
     SPI_NOCMD = 0x00,
     SPI_SUCCESS = 0x01,
     SPI_OUT_OF_RANGE = 0x02,
+    SPI_SUCCESS_AND_ENABLED = 0x03,
+    SPI_SUCCESS_AND_DISABLED = 0x04,
     SPI_FAIL = 0xFF
 } spi_radio_responses_t;
 
+// Message format looks like: (here represented as a comment since this would
+// require variable length arrays...)
+//typedef struct {
+//    uint8_t msg_length;
+//    uint8_t msg[0..64];
+//    uint8_t chksum; // XOR of all previous bits excluding msg_length
+//} __attribute__((packed)) msg_format;
+//
 #endif
