@@ -61,11 +61,14 @@ NCSSPybRadio::NCSSPybRadio() :
     storage(),
     messageBus(),
     thermometer(storage),
-    led_io(P0_15, MICROBIT_PIN_P15, PIN_CAPABILITY_STANDARD),
+    led_io(MICROBIT_ID_IO_P0, P0_21, PIN_CAPABILITY_STANDARD),
     radio()
 {
     // Clear our status
     status = 0;
+
+    // Radio starts disabled
+    radio_enabled = 0;
 }
 
 /**

@@ -79,6 +79,7 @@ class NCSSPybRadio
 
     // Bluetooth related member variables.
     MicroBitRadio               radio;
+    uint8_t                     radio_enabled;
 
     /**
       * Constructor.

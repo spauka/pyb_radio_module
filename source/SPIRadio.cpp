@@ -26,40 +26,34 @@ DEALINGS IN THE SOFTWARE.
 
 #include "NCSSPybRadio.h"
 #include "SPIRadio.h"
+#include "SPIRadioCmds.h"
 
-NCSSPybRadio module;
-// For the quokkaberry
-//SPISlave spi(P0_22, P0_23, P0_21, P0_24); // MOSI, MISO, SCLK, CS
-// For the test board
-SPISlave spi(P0_13, P0_12, P0_9, P0_8); // MOSI, MISO, SCLK, CS
+// We need access to the module/spi instances
+extern NCSSPybModule module;
+extern SPISlave spi;
 
-int main()
-{
-    uint8_t pin_state = 0;
+// Loop over the command buffer and 
+void spi_cmd_switch(spi_radio_cmds_t cmd) {
+    switch(cmd) {
+        case SPI_NOOP:
+            // NOOP
+            spi.reply(SPI_SUCCESS);
+            break;
 
-    // Initialise the module and radio
-    module.init();
-    module.radio.enable();
-    //led.period_us(100);
-
-    // Initialize SPI slave settings
-    spi.format(8, 0); // 8bits per frame, default polarity+phase
-    spi.reply(0x00); // Prime with a default reply
-
-    int r = 0;
-    while (true) {
-        r = spi.receive();
-        if (r) {
-            uint16_t v = (uint16_t) spi.read();
-            v = (v+1) % 0x100;
-            spi.reply(v);
-            //led.pulsewidth_us(1* (pin_state ^= 1));
-            module.led_io.setAnalogValue(5 * (pin_state ^= 1));
-        }
+        // Radio State
+        case SPI_RADIO_STATE_ENABLE:
+            module.radio.enable(); // TODO: Check success
+            module.radio_enabled = 1;
+            spi.reply(SPI_SUCCESS);
+            break;
+        case SPI_RADIO_STATE_DISABLE:
+            module.radio.disable(); // TODO: Check success
+            module.radio_enabled = 0;
+            spi.reply(SPI_SUCCESS);
+            break;
+        case SPI_RADIO_STATE_QUERY:
+            spi.reply(SPI_SUCCESS); // TODO: Multiple responses
+            spi.reply(module.radio_enabled);
+            break;
     }
-
-    // We will never get here, but this would put us in a waiting loop.
-    // Use if we don't use main.
-    release_fiber();
 }
-
