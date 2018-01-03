@@ -65,6 +65,7 @@ typedef enum {
     SPI_OUT_OF_RANGE = 0x02,
     SPI_SUCCESS_AND_ENABLED = 0x03,
     SPI_SUCCESS_AND_DISABLED = 0x04,
+    SPI_PERIPH_BUSY = 0xF0,
     SPI_FAIL = 0xFF
 } spi_radio_responses_t;
 
@@ -74,6 +75,10 @@ typedef enum {
 //    uint8_t msg_length;
 //    uint8_t msg[0..64];
 //    uint8_t chksum; // XOR of all previous bits excluding msg_length
+//    spi_radio_response_t success;
 //} __attribute__((packed)) msg_format;
+//
+//Note: The above message format is only sent for commands that have data
+//      so the SPI_RADIO_STATE_* commands only send a response.
 //
 #endif
