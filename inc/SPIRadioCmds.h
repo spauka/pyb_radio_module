@@ -66,7 +66,8 @@ typedef enum {
     SPI_SUCCESS_AND_ENABLED = 0x03,
     SPI_SUCCESS_AND_DISABLED = 0x04,
     SPI_PERIPH_BUSY = 0xF0,
-    SPI_FAIL = 0xFF
+    SPI_OVERFLOW = 0xF1,
+    SPI_OTHER_FAIL = 0xFF
 } spi_radio_responses_t;
 
 // Message format looks like: (here represented as a comment since this would
