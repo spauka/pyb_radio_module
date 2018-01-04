@@ -69,8 +69,6 @@ NCSSPybRadio::NCSSPybRadio() :
 
     // Radio starts disabled
     radio_enabled = 0;
-    // Channel starts at 0
-    radio_channel = 0;
 }
 
 /**
@@ -95,3 +93,12 @@ void NCSSPybRadio::init()
     status |= MODULE_INITIALIZED;
 }
 
+uint8_t NCSSPybRadio::radio_channel(void) {
+    return (uint8_t) NRF_RADIO->FREQUENCY;
+}
+
+//TODO: This mapping is incorrect, needs to be restored
+// to 0..7 range
+uint8_t NCSSPybRadio::radio_power(void) {
+    return (uint8_t) NRF_RADIO->TXPOWER;
+}

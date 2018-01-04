@@ -132,17 +132,35 @@ void spi_cmd_switch(spi_radio_cmds_t cmd, uint8_t *io_buffer, const uint32_t len
                 break;
             }
             response = module.radio.setFrequencyBand(io_buffer[2]);
-            if (response == MICROBIT_OK) {
+            if (response == MICROBIT_OK)
                 spi.reply(SPI_SUCCESS);
-                module.radio_channel = io_buffer[2];
-            }
             else
                 spi.reply(SPI_OTHER_FAIL);
             break;
         case SPI_RADIO_CHAN_QUERY:
-            craft_packet(io_buffer, SPI_SUCCESS, &module.radio_channel, 1);
+            response = module.radio_channel();
+            craft_packet(io_buffer, SPI_SUCCESS, &response, 1);
             spi.reply_buffer(io_buffer, 4);
             break;
+        case SPI_RADIO_POWER_SET:
+            if (check != 1) { // length must be 1
+                spi.reply(SPI_INVALID_LENGTH);
+                break;
+            }
+            if (io_buffer[2] > 7) { // Out of range
+                spi.reply(SPI_OUT_OF_RANGE);
+                break;
+            }
+            response = module.radio.setTransmitPower(io_buffer[2]);
+            if (response == MICROBIT_OK)
+                spi.reply(SPI_SUCCESS);
+            else
+                spi.reply(SPI_OTHER_FAIL);
+            break;
+        case SPI_RADIO_POWER_QUERY:
+            response = module.radio_power();
+            craft_packet(io_buffer, SPI_SUCCESS, &response, 1);
+            spi.reply_buffer(io_buffer, 4);
         default:
             spi.reply(SPI_INVALID_COMMAND);
             break;
