@@ -29,6 +29,6 @@ DEALINGS IN THE SOFTWARE.
 #include "SPIRadioCmds.h"
 
 // Loop to handle SPI commands
-void spi_cmd_switch(spi_radio_cmds_t);
+void spi_cmd_switch(spi_radio_cmds_t, uint8_t *io_buffer, uint32_t length);
 
 #endif
