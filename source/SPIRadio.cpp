@@ -108,16 +108,14 @@ void spi_cmd_switch(spi_radio_cmds_t cmd, uint8_t *io_buffer, const uint32_t len
         // Radio State
         case SPI_RADIO_STATE_ENABLE:
             module.radio.enable(); // TODO: Check success
-            module.radio_enabled = 1;
             spi.reply(SPI_SUCCESS);
             break;
         case SPI_RADIO_STATE_DISABLE:
             module.radio.disable(); // TODO: Check success
-            module.radio_enabled = 0;
             spi.reply(SPI_SUCCESS);
             break;
         case SPI_RADIO_STATE_QUERY:
-            if (module.radio_enabled)
+            if (module.radio_enabled())
                 spi.reply(SPI_SUCCESS_AND_ENABLED);
             else
                 spi.reply(SPI_SUCCESS_AND_DISABLED);

@@ -55,7 +55,6 @@ int main()
     // Initialise the module and radio
     module.init();
     module.radio.enable();
-    module.radio_enabled = 1;
     //led.period_us(100);
 
     // Initialize SPI slave settings

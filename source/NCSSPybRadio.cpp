@@ -67,9 +67,6 @@ NCSSPybRadio::NCSSPybRadio() :
 {
     // Clear our status
     status = 0;
-
-    // Radio starts disabled
-    radio_enabled = 0;
 }
 
 /**
@@ -92,6 +89,16 @@ void NCSSPybRadio::init()
     scheduler_init(messageBus);
 
     status |= MODULE_INITIALIZED;
+}
+
+/**
+ * Various methods to query radio state, since microbit does
+ * not provice a method of querying
+ */
+uint8_t NCSSPybRadio::radio_enabled(void) {
+    // If STATE == 0, radio is disabled, otherwise
+    // it is in one of the ON-like states.
+    return (uint8_t) (NRF_RADIO->STATE != 0);
 }
 
 uint8_t NCSSPybRadio::radio_channel(void) {

@@ -79,8 +79,8 @@ class NCSSPybRadio
 
     // Bluetooth related member variables.
     MicroBitRadio               radio;
-    uint8_t                     radio_enabled;
     // Various functions to query the radio state
+    uint8_t radio_enabled(void);
     uint8_t radio_channel(void);
     uint8_t radio_power(void);
 
