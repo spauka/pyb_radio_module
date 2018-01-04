@@ -69,6 +69,8 @@ NCSSPybRadio::NCSSPybRadio() :
 
     // Radio starts disabled
     radio_enabled = 0;
+    // Channel starts at 0
+    radio_channel = 0;
 }
 
 /**
