@@ -29,13 +29,28 @@ DEALINGS IN THE SOFTWARE.
 
 const uint8_t SPI_IOBUF_SIZE = 64;
 
+typedef enum {
+    SPI_OP_SUCCESS,
+    SPI_OP_NOT_READY,
+    SPI_OP_INSUFFICIENT_BUFFER,
+    SPI_OP_OTHER_FAIL
+} spi_op_status_t;
+
 class SPISlaveExt : public SPISlave {
     private:
         // Allocate space for input and output
-        uint8_t inputBuf[SPI_IOBUF_SIZE];
+        uint8_t inputBuf[SPI_IOBUF_SIZE] = {0};
         uint8_t intputBuf_size;
-        uint8_t outputBuf[SPI_IOBUF_SIZE];
+        uint8_t outputBuf[SPI_IOBUF_SIZE] = {0};
         uint8_t outputBuf_size;
+
+        // SPI Device Commands
+        // Acquire and release semaphores for modifying buffers
+        void acquire_sem(void);
+        void release_sem(void);
+
+        // Disable single-byte read/reply operation. They no longer make sense...
+        int read(void);
     public:
         /**
          * Constructor: initialize empty buffers and set up pins
@@ -43,23 +58,41 @@ class SPISlaveExt : public SPISlave {
         SPISlaveExt(PinName mosi, PinName miso, PinName sclk, PinName ssel);
 
         /**
+         * number of received bytes
+         */
+        int receive(void);
+
+        /**
          * read multiple bytes
          *
-         * c is the character written out during read (defaults to 0x00)
-         * len is the number of characters to read
+         * buffer is where we should place bytes
+         * maxLen is the size of the buffer
+         * release tells us whether to release the CPU semaphore after operating.
+         *   If we want to respond we should keep hold of the semaphore, however 
+         *   we MUST then call release before the device will send any messages.
+         *
          */
-        void read_buffer(uint8_t len, uint8_t c=0x00);
+        spi_op_status_t read_buffer(uint8_t* buffer, uint8_t maxLen, uint8_t release = 1);
 
         /**
-         * read and write multiple bytes.
+         * prepare a response message
+         * outBuffer is the response that we want to send
+         * len is the length of the response
+         * release tells us whether we are ready immediately after this operation.
+         *   If we still want to oparate on this data then we should set this to 0,
+         *   but we then MUST call release before the device will send this message.
          */
-        void read_write_buffer(uint8_t *outBuf, uint8_t len);
+        spi_op_status_t reply_buffer(uint8_t* outBuffer, uint8_t len, uint8_t release = 1);
 
-    private:
         /**
-         * Internal function to read and write into our own buffers
+         * Shortcut for a single byte response
          */
-        void do_read_write(uint8_t len);
+        spi_op_status_t reply(int d);
+
+        /**
+         * Release CPU semaphore for next operation
+         */
+        spi_op_status_t release(void);
 };
 
 #endif

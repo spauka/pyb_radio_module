@@ -28,11 +28,25 @@ DEALINGS IN THE SOFTWARE.
 #include "SPIRadio.h"
 #include "SPISlaveExt.h"
 
+#include YOTTA_BUILD_INFO_HEADER
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
+/**
+ * Get version info
+ */
+const char * version_info(void) {
+    return "Quokka Radio r." TOSTRING(YOTTA_BUILD_VCS_DESCRIPTION);
+}
+
 NCSSPybRadio module;
-// For the quokkaberry
+// For the quokka
 //SPISlave spi(P0_22, P0_23, P0_21, P0_24); // MOSI, MISO, SCLK, CS
 // For the test board
 SPISlaveExt spi(P0_13, P0_12, P0_9, P0_8); // MOSI, MISO, SCLK, CS
+
+// Allocate space for a message buffer
+uint8_t io_buffer[64];
 
 int main()
 {
@@ -46,15 +60,18 @@ int main()
 
     // Initialize SPI slave settings
     spi.format(8, 0); // 8bits per frame, default polarity+phase
-    spi.reply(0x00); // Prime with a default reply
+    // Prime with a default response
+    spi.reply(0x00);
 
     int r = 0;
     while (true) {
         r = spi.receive();
         if (r) {
-            uint8_t v = spi.read();
-            spi_radio_cmds_t cmd = (spi_radio_cmds_t) v;
-            spi_cmd_switch(cmd);
+            spi_op_status_t success = spi.read_buffer(io_buffer, 64, 0);
+            if (success != SPI_OP_SUCCESS)
+                continue;
+            spi_radio_cmds_t cmd = (spi_radio_cmds_t) io_buffer[0];
+            spi_cmd_switch(cmd, io_buffer, r);
             //led.pulsewidth_us(1* (pin_state ^= 1));
             module.led_io.setAnalogValue(5 * (pin_state ^= 1));
         }
