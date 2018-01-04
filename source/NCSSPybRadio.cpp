@@ -36,9 +36,10 @@ DEALINGS IN THE SOFTWARE.
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
-#include "NCSSPybRadio.h"
-
 #include "nrf_soc.h"
+
+#include "NCSSPybRadio.h"
+#include "MicroBitBLEManager.h"
 
 /*
  * Return to our predefined compiler settings.
@@ -97,8 +98,27 @@ uint8_t NCSSPybRadio::radio_channel(void) {
     return (uint8_t) NRF_RADIO->FREQUENCY;
 }
 
-//TODO: This mapping is incorrect, needs to be restored
-// to 0..7 range
+// Register mapping
+typedef union {
+    uint32_t TXPOWER;
+    struct {
+        int8_t _pad[3];
+        int8_t TXPOWER_dbm;
+    } __attribute__((packed)) UNPACKED_TXPOWER;
+} u_txpower_t;
+// Return txpower in microbit levels from 0 .. 7
 uint8_t NCSSPybRadio::radio_power(void) {
-    return (uint8_t) NRF_RADIO->TXPOWER;
+    u_txpower_t txpower;
+    // Extract TXpower from register
+    txpower.TXPOWER = NRF_RADIO->TXPOWER;
+    int8_t txpower_dbm = txpower.UNPACKED_TXPOWER.TXPOWER_dbm;
+
+    // convert to microbit units
+    uint8_t txpower_mbl = 8;
+    for (uint8_t i = 0; i < MICROBIT_BLE_POWER_LEVELS; i += 1)
+        if (txpower_dbm == MICROBIT_BLE_POWER_LEVEL[i])
+            txpower_mbl = i;
+
+    // Return value
+    return txpower_mbl;
 }
