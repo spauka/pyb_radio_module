@@ -33,6 +33,9 @@ DEALINGS IN THE SOFTWARE.
 extern NCSSPybRadio module;
 extern SPISlaveExt spi;
 
+// Radio messages buffer
+extern uint8_t radio_buffer_len;
+extern uint8_t radio_buffer[64];
 // Version info prototype
 const char* version_info(void);
 
@@ -120,6 +123,7 @@ void spi_cmd_switch(spi_radio_cmds_t cmd, uint8_t *io_buffer, const uint32_t len
             else
                 spi.reply(SPI_SUCCESS_AND_DISABLED);
             break;
+        // Radio channel
         case SPI_RADIO_CHAN_SET:
             if (check != 1) { // length must be 1
                 spi.reply(SPI_INVALID_LENGTH);
@@ -140,6 +144,7 @@ void spi_cmd_switch(spi_radio_cmds_t cmd, uint8_t *io_buffer, const uint32_t len
             craft_packet(io_buffer, SPI_SUCCESS, &response, 1);
             spi.reply_buffer(io_buffer, 4);
             break;
+        // Radio Power
         case SPI_RADIO_POWER_SET:
             if (check != 1) { // length must be 1
                 spi.reply(SPI_INVALID_LENGTH);
@@ -159,6 +164,30 @@ void spi_cmd_switch(spi_radio_cmds_t cmd, uint8_t *io_buffer, const uint32_t len
             response = module.radio_power();
             craft_packet(io_buffer, SPI_SUCCESS, &response, 1);
             spi.reply_buffer(io_buffer, 4);
+            break;
+        // Message Queries
+        case SPI_MSG_QUERY:
+            if (radio_buffer_len > 0)
+                spi.reply(SPI_MESSAGE);
+            else
+                spi.reply(SPI_NO_MESSAGE);
+            break;
+        case SPI_SEND_CMD:
+            if (io_buffer[2] > 61) {
+                spi.reply(SPI_REPLY_OVERFLOW);
+                break;
+            }
+            module.radio.datagram.send(io_buffer+3, io_buffer[2]);
+            spi.reply(SPI_SUCCESS);
+            break;
+        case SPI_RECV_CMD:
+            if (radio_buffer_len == 0) {
+                spi.reply(SPI_NO_MESSAGE);
+                break;
+            }
+            craft_packet(io_buffer, SPI_SUCCESS, radio_buffer, radio_buffer_len);
+            spi.reply_buffer(io_buffer, radio_buffer_len+3);
+            break;
         default:
             spi.reply(SPI_INVALID_COMMAND);
             break;

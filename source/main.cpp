@@ -46,7 +46,24 @@ NCSSPybRadio module;
 SPISlaveExt spi(P0_13, P0_12, P0_9, P0_8); // MOSI, MISO, SCLK, CS
 
 // Allocate space for a message buffer
+uint8_t radio_buffer_len;
+uint8_t radio_buffer[64];
 uint8_t io_buffer[64];
+
+void onRadioMsg(MicroBitEvent e) {
+    ManagedString s = module.radio.datagram.recv();
+
+    // Save the data to the radio buffer
+    // Note: we sholdn't have concurrency issues here
+    // as this should only run at the end of the main event
+    // loop.
+
+    memcpy(radio_buffer, s.toCharArray(), s.length()+1);
+    radio_buffer_len = s.length();
+
+    // Let the message get handled in the main loop.
+    return;
+}
 
 int main()
 {
@@ -55,6 +72,7 @@ int main()
     // Initialise the module and radio
     module.init();
     module.radio.enable();
+
     //led.period_us(100);
 
     // Initialize SPI slave settings
@@ -64,7 +82,9 @@ int main()
 
     int r = 0;
     while (true) {
+        // Check whether we've received a message on SPI
         r = spi.receive();
+        // If we have, handle it
         if (r) {
             spi_op_status_t success = spi.read_buffer(io_buffer, 64, 0);
             if (success != SPI_OP_SUCCESS)
@@ -74,6 +94,9 @@ int main()
             //led.pulsewidth_us(1* (pin_state ^= 1));
             module.led_io.setAnalogValue(5 * (pin_state ^= 1));
         }
+
+        // Run any waiting events (i.e. a message has arrived?)
+        schedule();
     }
 
     // We will never get here, but this would put us in a waiting loop.
