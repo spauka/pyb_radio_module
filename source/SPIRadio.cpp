@@ -95,7 +95,8 @@ void spi_cmd_switch(spi_radio_cmds_t cmd, uint8_t *io_buffer, const uint32_t len
             spi.reply(SPI_CHECKSUM_FAIL);
             return;
         }
-    }
+    } else
+        check = 0;
     // Choose the correct action
     switch(cmd) {
         case SPI_NOOP:
@@ -173,11 +174,15 @@ void spi_cmd_switch(spi_radio_cmds_t cmd, uint8_t *io_buffer, const uint32_t len
                 spi.reply(SPI_NO_MESSAGE);
             break;
         case SPI_SEND_CMD:
-            if (io_buffer[2] > 61) {
+            if (check == 0) {
+                spi.reply(SPI_INVALID_LENGTH);
+                break;
+            }
+            if (check > 61) {
                 spi.reply(SPI_REPLY_OVERFLOW);
                 break;
             }
-            module.radio.datagram.send(io_buffer+3, io_buffer[2]);
+            module.radio.datagram.send(io_buffer+2, io_buffer[1]);
             spi.reply(SPI_SUCCESS);
             break;
         case SPI_RECV_CMD:

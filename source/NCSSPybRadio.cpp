@@ -109,8 +109,8 @@ uint8_t NCSSPybRadio::radio_channel(void) {
 typedef union {
     uint32_t TXPOWER;
     struct {
-        int8_t _pad[3];
         int8_t TXPOWER_dbm;
+        int8_t _pad[3];
     } __attribute__((packed)) UNPACKED_TXPOWER;
 } u_txpower_t;
 // Return txpower in microbit levels from 0 .. 7
