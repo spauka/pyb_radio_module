@@ -135,8 +135,16 @@ class Radio:
         return False
 
     def send(self, message):
-        # TODO: write this!!!
-        self.write([SPI_SEND_CMD])
+        # Convert the message to bytes
+        message = bytearray(message)
+
+        # Calculate the checksum
+        chk = 0
+        for c in message:
+            chk ^= c
+
+        # Compile the message
+        self.write([SPI_SEND_CMD, len(message)] + list(message) + [chk])
 
     def receive(self):
         """
