@@ -1,7 +1,7 @@
 # boot.py -- run on boot-up
 # can run arbitrary Python, but best to keep it minimal
 
-from pyb import delay
+from pyb import delay, udelay
 from machine import Pin, SPI
 
 # States
@@ -58,17 +58,30 @@ class Radio:
         self.spi = spi
 
     def version(self):
-        response = write([SPI_VERSION])
-        return bytes(read_packet(response)).decode('ascii').strip('\x00')
+        """
+        Return version string
+        """
+        response = self.write([SPI_VERSION])
+        return bytes(self.read_packet(response)).decode('ascii').strip('\x00')
 
     def enable(self):
-        write([SPI_RADIO_STATE_ENABLE])
+        """
+        Enable the radio
+        """
+        self.write([SPI_RADIO_STATE_ENABLE])
 
     def disable(self):
-        write([SPI_RADIO_STATE_DISABLE])
+        """
+        Disable the radio
+        """
+        self.write([SPI_RADIO_STATE_DISABLE])
 
     def is_enabled(self):
-        response = write([SPI_RADIO_STATE_QUERY])
+        """
+        Check if the radio is enabled.
+        Return true if so, otherwise false
+        """
+        response = self.write([SPI_RADIO_STATE_QUERY])
         if response[0] == SPI_SUCCESS_AND_ENABLED:
             return True
         elif response[0] == SPI_SUCCESS_AND_DISABLED:
@@ -76,23 +89,45 @@ class Radio:
         return False
 
     def set_channel(self, channel):
-        assert 0 <= channel <= 100, 'Channel must be between 1 and 100'
-        write([SPI_RADIO_CHAN_SET, 1, channel&0xff, channel&0xff])
+        """
+        Set the channel the radio broadcasts on.
+        This is defined as 2400MHz + N, where N is between 0 and 100
+        """
+        if not 0 <= channel <= 100:
+            raise ValueError("%d is an invalid channel. Must be between 0 and 100 inclusive." % channel)
+        self.write([SPI_RADIO_CHAN_SET, 1, channel&0xff, channel&0xff])
 
     def get_channel(self):
-        response = write([SPI_RADIO_CHAN_QUERY])
-        return read_packet(response)[0]
+        """
+        Get the channel the radio broadcasts on.
+        This is defined as 2400MHz + N, where N is between 0 and 100
+        """
+        response = self.write([SPI_RADIO_CHAN_QUERY])
+        return self.read_packet(response)[0]
 
     def set_power(self, power):
+        """
+        Set the transmission power.
+        This is a number between 0 and 7 that maps to powers on the nRF
+        from [-30, -20, -16, -12, -8, -4, 0, 4].
+        """
         assert 0 <= power <= 7, 'Power must be between 0 and 7'
-        write([SPI_RADIO_POWER_SET, 1, power, power])
+        self.write([SPI_RADIO_POWER_SET, 1, power, power])
 
     def get_power(self):
-        response = write([SPI_RADIO_POWER_QUERY])
-        return read_packet(response)[0]
+        """
+        Get the transmission power.
+        This is a number between 0 and 7 that maps to powers on the nRF
+        from [-30, -20, -16, -12, -8, -4, 0, 4].
+        """
+        response = self.write([SPI_RADIO_POWER_QUERY])
+        return self.read_packet(response)[0]
 
     def is_message_available(self):
-        response = write([SPI_MSG_QUERY])
+        """
+        Check if a message has been received
+        """
+        response = self.write([SPI_MSG_QUERY])
         if response[0] == SPI_MESSAGE:
             return True
         elif response[0] == SPI_NO_MESSAGE:
@@ -100,39 +135,47 @@ class Radio:
         return False
 
     def send(self, message):
-        # TODO: Write this!!!
-        write([SPI_SEND_CMD])
+        # TODO: write this!!!
+        self.write([SPI_SEND_CMD])
 
     def receive(self):
-        r = write([SPI_RECV_CMD])
-        return read_packet(r)
+        """
+        Receive a message
+        """
+        r = self.write([SPI_RECV_CMD])
+        return self.read_packet(r)
 
     def write(self, data):
         data = bytearray(data)
 
+        # Write the command to the radio
         self.slave_select.value(0)
         self.spi.write(data)
         self.slave_select.value(1)
 
         # Wait until the radio is ready to respond
         self.slave_select.value(0)
-        resp = self.spi.read(1, 0x00)
+        resp = self.spi.read(1, 0x00)[0]
         while resp == SPI_PERIPH_BUSY:
             self.slave_select.value(1)
-            pyb.udelay(100)
+            udelay(100)
             self.slave_select.value(0)
-            resp = self.spi.read(1, 0x00)
+            resp = self.spi.read(1, 0x00)[0]
 
+        # Read the response from the radio
         data = bytearray(64)
         self.spi.readinto(data, 0x00)
         self.slave_select.value(1)
 
-        return data.strip(bytes((0xf1,)))
+        # restore the status code to the beginning of the array
+        data[1:] = data[:-1]
+        data[0] = resp
+
+        return data
 
     def read_packet(self, packet):
-        status_code = packet[0]
-
         # Check for error codes
+        status_code = packet[0]
         if status_code not in (SPI_SUCCESS, SPI_SUCCESS_AND_ENABLED, SPI_SUCCESS_AND_DISABLED):
             raise RuntimeError("Radio Error. Status Code 0x%x" % status_code)
 
@@ -140,7 +183,7 @@ class Radio:
         length = packet[1]
         if length == 0:
             return bytearray()
-        data = packet[2:2 + length]
+        data = packet[2:(2 + length)]
         expected_checksum = packet[2 + length]
 
         # Calculate & compare checksum
