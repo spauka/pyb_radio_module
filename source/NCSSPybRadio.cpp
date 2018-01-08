@@ -85,6 +85,9 @@ void NCSSPybRadio::init()
     if (status & MODULE_INITIALIZED)
         return;
 
+    // Initialize the system timer
+    system_timer_init(5);
+
     // Bring up fiber scheduler.
     scheduler_init(messageBus);
 

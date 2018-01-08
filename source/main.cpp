@@ -57,7 +57,6 @@ void onRadioMsg(MicroBitEvent e) {
     // Note: we sholdn't have concurrency issues here
     // as this should only run at the end of the main event
     // loop.
-
     memcpy(radio_buffer, s.toCharArray(), s.length()+1);
     radio_buffer_len = s.length();
 
@@ -71,6 +70,7 @@ int main()
 
     // Initialise the module and radio
     module.init();
+    module.messageBus.listen(MICROBIT_ID_RADIO, MICROBIT_RADIO_EVT_DATAGRAM, onRadioMsg);
     module.radio.enable();
 
     //led.period_us(100);
@@ -95,8 +95,12 @@ int main()
             module.led_io.setAnalogValue(5 * (pin_state ^= 1));
         }
 
+        r = module.radio.dataReady();
+
         // Run any waiting events (i.e. a message has arrived?)
         schedule();
+
+        fiber_sleep(1);
     }
 
     // We will never get here, but this would put us in a waiting loop.

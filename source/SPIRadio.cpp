@@ -186,12 +186,17 @@ void spi_cmd_switch(spi_radio_cmds_t cmd, uint8_t *io_buffer, const uint32_t len
             spi.reply(SPI_SUCCESS);
             break;
         case SPI_RECV_CMD:
+            // Check if a message is available
             if (radio_buffer_len == 0) {
                 spi.reply(SPI_NO_MESSAGE);
                 break;
             }
+            // If it is craft a packet
             craft_packet(io_buffer, SPI_SUCCESS, radio_buffer, radio_buffer_len);
+            // Send the message to the pyboard
             spi.reply_buffer(io_buffer, radio_buffer_len+3);
+            // Mark the message as read
+            radio_buffer_len = 0;
             break;
         default:
             spi.reply(SPI_INVALID_COMMAND);
