@@ -61,27 +61,27 @@ class Radio:
         """
         Return version string
         """
-        response = self.write([SPI_VERSION])
+        response = self._write([SPI_VERSION])
         return bytes(self.read_packet(response)).decode('ascii').strip('\x00')
 
     def enable(self):
         """
         Enable the radio
         """
-        self.write([SPI_RADIO_STATE_ENABLE])
+        self._write([SPI_RADIO_STATE_ENABLE])
 
     def disable(self):
         """
         Disable the radio
         """
-        self.write([SPI_RADIO_STATE_DISABLE])
+        self._write([SPI_RADIO_STATE_DISABLE])
 
     def is_enabled(self):
         """
         Check if the radio is enabled.
         Return true if so, otherwise false
         """
-        response = self.write([SPI_RADIO_STATE_QUERY])
+        response = self._write([SPI_RADIO_STATE_QUERY])
         if response[0] == SPI_SUCCESS_AND_ENABLED:
             return True
         elif response[0] == SPI_SUCCESS_AND_DISABLED:
@@ -95,14 +95,14 @@ class Radio:
         """
         if not 0 <= channel <= 100:
             raise ValueError("%d is an invalid channel. Must be between 0 and 100 inclusive." % channel)
-        self.write([SPI_RADIO_CHAN_SET, 1, channel&0xff, channel&0xff])
+        self._write([SPI_RADIO_CHAN_SET, 1, channel&0xff, channel&0xff])
 
     def get_channel(self):
         """
         Get the channel the radio broadcasts on.
         This is defined as 2400MHz + N, where N is between 0 and 100
         """
-        response = self.write([SPI_RADIO_CHAN_QUERY])
+        response = self._write([SPI_RADIO_CHAN_QUERY])
         return self.read_packet(response)[0]
 
     def set_power(self, power):
@@ -112,7 +112,7 @@ class Radio:
         from [-30, -20, -16, -12, -8, -4, 0, 4].
         """
         assert 0 <= power <= 7, 'Power must be between 0 and 7'
-        self.write([SPI_RADIO_POWER_SET, 1, power, power])
+        self._write([SPI_RADIO_POWER_SET, 1, power, power])
 
     def get_power(self):
         """
@@ -120,14 +120,14 @@ class Radio:
         This is a number between 0 and 7 that maps to powers on the nRF
         from [-30, -20, -16, -12, -8, -4, 0, 4].
         """
-        response = self.write([SPI_RADIO_POWER_QUERY])
+        response = self._write([SPI_RADIO_POWER_QUERY])
         return self.read_packet(response)[0]
 
     def is_message_available(self):
         """
         Check if a message has been received
         """
-        response = self.write([SPI_MSG_QUERY])
+        response = self._write([SPI_MSG_QUERY])
         if response[0] == SPI_MESSAGE:
             return True
         elif response[0] == SPI_NO_MESSAGE:
@@ -144,21 +144,30 @@ class Radio:
             chk ^= c
 
         # Compile the message
-        self.write([SPI_SEND_CMD, len(message)] + list(message) + [chk])
+        self._write([SPI_SEND_CMD, len(message)] + list(message) + [chk])
 
     def receive(self):
         """
         Receive a message
         """
-        r = self.write([SPI_RECV_CMD])
-        return self.read_packet(r)
+        r = self._write([SPI_RECV_CMD])
+        data = self.read_packet(r)
+        if data is not None:
+            return bytes(data).decode()
+        return data
 
-    def write(self, data):
+    def _write(self, data):
         data = bytearray(data)
+        resp = bytearray(len(data))
 
         # Write the command to the radio
         self.slave_select.value(0)
-        self.spi.write(data)
+        self.spi.write_readinto(data, resp)
+        while resp[0] == SPI_PERIPH_BUSY:
+            self.slave_select.value(1)
+            udelay(100)
+            self.slave_select.value(0)
+            self.spi.write_readinto(data, resp)
         self.slave_select.value(1)
 
         # Wait until the radio is ready to respond
@@ -184,8 +193,11 @@ class Radio:
     def read_packet(self, packet):
         # Check for error codes
         status_code = packet[0]
-        if status_code not in (SPI_SUCCESS, SPI_SUCCESS_AND_ENABLED, SPI_SUCCESS_AND_DISABLED):
+        if status_code not in (SPI_SUCCESS, SPI_SUCCESS_AND_ENABLED, SPI_SUCCESS_AND_DISABLED, SPI_NO_MESSAGE):
             raise RuntimeError("Radio Error. Status Code 0x%x" % status_code)
+
+        if status_code == SPI_NO_MESSAGE:
+            return None
 
         # Get the data out of the packet
         length = packet[1]
@@ -202,10 +214,3 @@ class Radio:
             raise RuntimeError('Checksum did not match (actual: %d, expected: %d)' % (checksum, expected_checksum))
 
         return data
-
-slave_select = Pin("Y5", Pin.OUT)
-spi = SPI(2, baudrate=10000000)
-
-slave_select.value(1)
-
-radio = Radio(slave_select, spi)

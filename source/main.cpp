@@ -41,9 +41,9 @@ const char * version_info(void) {
 
 NCSSPybRadio module;
 // For the quokka
-//SPISlave spi(P0_22, P0_23, P0_21, P0_24); // MOSI, MISO, SCLK, CS
+SPISlaveExt spi(P0_22, P0_23, P0_21, P0_24); // MOSI, MISO, SCLK, CS
 // For the test board
-SPISlaveExt spi(P0_13, P0_12, P0_9, P0_8); // MOSI, MISO, SCLK, CS
+//SPISlaveExt spi(P0_13, P0_12, P0_9, P0_8); // MOSI, MISO, SCLK, CS
 
 // Allocate space for a message buffer
 uint8_t radio_buffer_len;
@@ -107,4 +107,3 @@ int main()
     // Use if we don't use main.
     release_fiber();
 }
-
