@@ -1,7 +1,7 @@
 # boot.py -- run on boot-up
 # can run arbitrary Python, but best to keep it minimal
 
-from pyb import delay, udelay
+from pyb import delay, udelay, millis
 from machine import Pin, SPI
 
 # States
@@ -56,6 +56,19 @@ class Radio:
     def __init__(self, slave_select, spi):
         self.slave_select = slave_select
         self.spi = spi
+
+        # Wait for up to a second for the nRF to be ready
+        time = millis() + 1000
+        success = False
+        while millis() < time:
+            try:
+                self.version()
+            except RuntimeError:
+                continue
+            success = True
+            break
+        if success == False:
+            raise RuntimeError("Unable to communicate with radio")
 
     def version(self):
         """
