@@ -90,6 +90,11 @@ class SPISlaveExt : public SPISlave {
         spi_op_status_t reply(int d);
 
         /**
+         * Check semaphore state
+         */
+        uint32_t sem_state(void);
+
+        /**
          * Release CPU semaphore for next operation
          */
         spi_op_status_t release(void);

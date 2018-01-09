@@ -84,6 +84,10 @@ int main()
     while (true) {
         // Check whether we've received a message on SPI
         r = spi.receive();
+        // Sometimes the SPI lock is not released. Force release here if it is still
+        // held by the CPU but there is no waiting message
+        if (r == 0 && spi.sem_state() == 1)
+          spi.release();
         // If we have, handle it
         if (r) {
             spi_op_status_t success = spi.read_buffer(io_buffer, 64, 0);
@@ -95,11 +99,8 @@ int main()
             module.led_io.setAnalogValue(5 * (pin_state ^= 1));
         }
 
-        r = module.radio.dataReady();
-
         // Run any waiting events (i.e. a message has arrived?)
         schedule();
-
         fiber_sleep(1);
     }
 

@@ -156,6 +156,13 @@ spi_op_status_t SPISlaveExt::reply(int d) {
 }
 
 /**
+ * Return the semaphore state
+ */
+uint32_t SPISlaveExt::sem_state(void) {
+  return _spi.spis->SEMSTAT;
+}
+
+/**
  * Release semaphore once buffers are prepared for the next operation
  */
 spi_op_status_t SPISlaveExt::release(void) {
