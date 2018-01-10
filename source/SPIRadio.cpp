@@ -35,7 +35,7 @@ extern SPISlaveExt spi;
 
 // Radio messages buffer
 extern uint8_t radio_buffer_len;
-extern uint8_t radio_buffer[64];
+extern uint8_t radio_buffer[SPI_IOBUF_SIZE];
 // Version info prototype
 const char* version_info(void);
 
@@ -68,7 +68,7 @@ uint8_t validate_packet(const uint8_t *io_buffer, const uint32_t length) {
 spi_op_status_t craft_packet(uint8_t *io_buffer, spi_radio_responses_t resp,
         const uint8_t *msg, const uint32_t length) {
     // Check that our message isn't too long
-    if (length > 61)
+    if (length > SPI_IOBUF_SIZE - 4)
         return SPI_OP_INSUFFICIENT_BUFFER;
 
     // Calculate our checksum
@@ -178,7 +178,7 @@ void spi_cmd_switch(spi_radio_cmds_t cmd, uint8_t *io_buffer, const uint32_t len
                 spi.reply(SPI_INVALID_LENGTH);
                 break;
             }
-            if (check > 61) {
+            if (check > SPI_IOBUF_SIZE - 4) {
                 spi.reply(SPI_REPLY_OVERFLOW);
                 break;
             }

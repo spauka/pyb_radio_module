@@ -27,7 +27,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "mbed.h"
 
-const uint8_t SPI_IOBUF_SIZE = 64;
+const uint16_t SPI_IOBUF_SIZE = 255;
 
 typedef enum {
     SPI_OP_SUCCESS,
@@ -68,7 +68,7 @@ class SPISlaveExt : public SPISlave {
          * buffer is where we should place bytes
          * maxLen is the size of the buffer
          * release tells us whether to release the CPU semaphore after operating.
-         *   If we want to respond we should keep hold of the semaphore, however 
+         *   If we want to respond we should keep hold of the semaphore, however
          *   we MUST then call release before the device will send any messages.
          *
          */

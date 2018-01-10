@@ -47,8 +47,8 @@ SPISlaveExt spi(P0_22, P0_23, P0_21, P0_24); // MOSI, MISO, SCLK, CS
 
 // Allocate space for a message buffer
 uint8_t radio_buffer_len;
-uint8_t radio_buffer[64];
-uint8_t io_buffer[64];
+uint8_t radio_buffer[SPI_IOBUF_SIZE];
+uint8_t io_buffer[SPI_IOBUF_SIZE];
 
 void onRadioMsg(MicroBitEvent e) {
     ManagedString s = module.radio.datagram.recv();
@@ -90,7 +90,7 @@ int main()
           spi.release();
         // If we have, handle it
         if (r) {
-            spi_op_status_t success = spi.read_buffer(io_buffer, 64, 0);
+          spi_op_status_t success = spi.read_buffer(io_buffer, sizeof(io_buffer), 0);
             if (success != SPI_OP_SUCCESS)
                 continue;
             spi_radio_cmds_t cmd = (spi_radio_cmds_t) io_buffer[0];
